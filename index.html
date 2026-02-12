@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice System</title>
+    <title>iVoice - System</title>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <style>
@@ -58,6 +58,41 @@
 
         .logo-text { font-weight: 600; font-size: 20px; }
 
+        /* --- MODE SWITCHER (Segmented Control) --- */
+        .switcher-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .segmented-control {
+            background: #e3e3e8;
+            padding: 4px;
+            border-radius: 12px;
+            display: inline-flex;
+            position: relative;
+        }
+
+        .segment-btn {
+            padding: 8px 40px;
+            border: none;
+            background: transparent;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .segment-btn.active {
+            background: white;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+
         /* --- Layout --- */
         .container {
             max-width: 900px;
@@ -109,7 +144,7 @@
         /* --- Items Table --- */
         .items-header-row {
             display: grid;
-            grid-template-columns: 3fr 1fr 1fr 1fr 30px; /* Same as item-row */
+            grid-template-columns: 3fr 1fr 1fr 1fr 30px;
             gap: 10px;
             margin-bottom: 10px;
             padding: 0 5px;
@@ -218,7 +253,6 @@
         .preview-table th { text-align: left; color: var(--text-secondary); border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; text-transform: uppercase; }
         .preview-table td { padding: 15px 0; border-bottom: 1px solid #fafafa; }
         
-        /* Summary Box */
         .summary-box {
             margin-top: 40px;
             display: flex;
@@ -266,22 +300,39 @@
     <header class="glass-header">
         <div class="nav-left">
             <a href="index.html" class="back-link" title="Back to Dashboard">←</a>
-            <div class="logo-text">Invoice System</div>
+            <div class="logo-text">iVoice System</div>
         </div>
     </header>
 
     <div class="container">
         
+        <div class="switcher-container">
+            <div class="segmented-control">
+                <button class="segment-btn active" onclick="setMode('invoice')" id="btn-inv">Invoice</button>
+                <button class="segment-btn" onclick="setMode('quote')" id="btn-quote">Quotation</button>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="margin:0; font-size: 28px;" id="page-title">New Invoice</h1>
+        </div>
+
         <div class="card">
-            <h3>Invoice Details</h3>
+            <h3>Document Details</h3>
             <div class="grid-2">
-                <div><label>Invoice #</label><input type="text" id="invNumber" value="INV-001"></div>
-                <div><label>Date</label><input type="date" id="invDate"></div>
+                <div>
+                    <label id="lbl-number">Invoice #</label>
+                    <input type="text" id="invNumber" value="INV-001">
+                </div>
+                <div>
+                    <label id="lbl-date">Date</label>
+                    <input type="date" id="invDate">
+                </div>
             </div>
         </div>
 
         <div class="card">
-            <h3>From & To</h3>
+            <h3>Parties</h3>
             <div class="grid-2">
                 <div>
                     <label>From</label>
@@ -289,7 +340,7 @@
                     <input type="text" id="fromAddress" placeholder="Address / Contact">
                 </div>
                 <div>
-                    <label>Bill To</label>
+                    <label id="lbl-to">Bill To</label>
                     <input type="text" id="toName" placeholder="Client Name" class="form-group">
                     <input type="text" id="toAddress" placeholder="Client Address">
                 </div>
@@ -328,7 +379,7 @@
         </div>
 
         <div style="text-align: center; margin-top: 40px;">
-            <button class="btn-primary" onclick="generatePreview()">Generate Preview</button>
+            <button class="btn-primary" onclick="generatePreview()" id="gen-btn">Generate Invoice</button>
         </div>
     </div>
 
@@ -347,13 +398,13 @@
                     <div style="color: #86868b; margin-top: 5px; white-space: pre-line;" id="prev-from-addr"></div>
                 </div>
                 <div style="text-align: right;">
-                    <div class="preview-title">INVOICE</div>
+                    <div class="preview-title" id="prev-main-title">INVOICE</div>
                     <div style="color: #86868b; margin-top: 5px;" id="prev-meta"></div>
                 </div>
             </div>
 
             <div style="margin-bottom: 40px;">
-                <strong style="color: #86868b; font-size: 12px; text-transform: uppercase;">Bill To:</strong>
+                <strong style="color: #86868b; font-size: 12px; text-transform: uppercase;" id="prev-bill-label">Bill To:</strong>
                 <div style="font-size: 20px; font-weight: 600; margin-top: 5px;" id="prev-client-name"></div>
                 <div style="color: #666;" id="prev-client-addr"></div>
             </div>
@@ -394,9 +445,47 @@
     </div>
 
 <script>
+    // --- Global Variables ---
+    let currentMode = 'invoice'; // or 'quote'
+
+    // --- Init ---
     document.getElementById('invDate').valueAsDate = new Date();
     addItem();
 
+    // --- Mode Switcher Logic ---
+    function setMode(mode) {
+        currentMode = mode;
+        
+        // Update Buttons
+        document.getElementById('btn-inv').classList.toggle('active', mode === 'invoice');
+        document.getElementById('btn-quote').classList.toggle('active', mode === 'quote');
+
+        // Update Labels & Placeholders
+        if (mode === 'invoice') {
+            document.getElementById('page-title').textContent = "New Invoice";
+            document.getElementById('lbl-number').textContent = "Invoice #";
+            document.getElementById('lbl-date').textContent = "Date";
+            document.getElementById('lbl-to').textContent = "Bill To";
+            document.getElementById('gen-btn').textContent = "Generate Invoice";
+            
+            // Set Default Number if empty or default
+            if(document.getElementById('invNumber').value.startsWith('QT-') || document.getElementById('invNumber').value === '') {
+                document.getElementById('invNumber').value = "INV-001";
+            }
+        } else {
+            document.getElementById('page-title').textContent = "New Quotation";
+            document.getElementById('lbl-number').textContent = "Quotation #";
+            document.getElementById('lbl-date').textContent = "Valid Until";
+            document.getElementById('lbl-to').textContent = "Quote For";
+            document.getElementById('gen-btn').textContent = "Generate Quotation";
+            
+            if(document.getElementById('invNumber').value.startsWith('INV-') || document.getElementById('invNumber').value === '') {
+                document.getElementById('invNumber').value = "QT-001";
+            }
+        }
+    }
+
+    // --- Standard Logic (Items, Totals) ---
     function addItem() {
         const id = Date.now();
         const html = `
@@ -425,15 +514,23 @@
         });
     }
 
+    // --- Preview Generation ---
     function generatePreview() {
-        // 1. Basic Info
+        // 1. Dynamic Labels based on Mode
+        const mainTitle = currentMode === 'invoice' ? 'INVOICE' : 'QUOTATION';
+        const billLabel = currentMode === 'invoice' ? 'Bill To:' : 'Quote For:';
+        
+        document.getElementById('prev-main-title').textContent = mainTitle;
+        document.getElementById('prev-bill-label').textContent = billLabel;
+
+        // 2. Map Data
         document.getElementById('prev-from-name').textContent = document.getElementById('fromName').value || 'Your Business';
         document.getElementById('prev-from-addr').textContent = document.getElementById('fromAddress').value;
         document.getElementById('prev-client-name').textContent = document.getElementById('toName').value || 'Client Name';
         document.getElementById('prev-client-addr').textContent = document.getElementById('toAddress').value;
         document.getElementById('prev-meta').innerHTML = `#${document.getElementById('invNumber').value}<br>${document.getElementById('invDate').value}`;
 
-        // 2. Items & Subtotal
+        // 3. Items Calculation
         const tbody = document.getElementById('prev-items-body');
         tbody.innerHTML = '';
         let subtotal = 0;
@@ -457,7 +554,7 @@
             }
         });
 
-        // 3. Discount Logic
+        // 4. Discount Logic
         const discountVal = parseFloat(document.getElementById('discountValue').value) || 0;
         const discountType = document.getElementById('discountType').value;
         let discountAmount = 0;
@@ -470,24 +567,18 @@
                 discountAmount = discountVal;
                 document.getElementById('disc-rate-display').innerText = '';
             }
-            
-            // Show Discount Row
             document.getElementById('row-discount').style.display = 'table-row';
             document.getElementById('prev-discount').innerText = `-${discountAmount.toFixed(2)}`;
         } else {
-            // Hide Discount Row if 0
             document.getElementById('row-discount').style.display = 'none';
         }
 
-        // 4. Final Calculation
         let grandTotal = subtotal - discountAmount;
         if(grandTotal < 0) grandTotal = 0;
 
-        // Display Totals
         document.getElementById('prev-subtotal').textContent = subtotal.toFixed(2);
         document.getElementById('prev-total').textContent = grandTotal.toFixed(2);
         
-        // Show Modal
         document.getElementById('previewModal').classList.add('active');
     }
 
@@ -497,7 +588,7 @@
 
     function downloadImage() {
         const element = document.getElementById("invoice-capture");
-        const invNum = document.getElementById('invNumber').value || "Invoice";
+        const invNum = document.getElementById('invNumber').value || (currentMode === 'invoice' ? "Invoice" : "Quotation");
         const btn = document.querySelector('.img-dl');
         const originalText = btn.innerText;
         btn.innerText = "Processing...";
