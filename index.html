@@ -90,7 +90,7 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 5px; }
         
-        input {
+        input, select {
             width: 100%; padding: 12px;
             border: 1px solid #d2d2d7;
             border-radius: 10px;
@@ -98,8 +98,9 @@
             background: #fafafa;
             transition: all 0.2s;
             box-sizing: border-box;
+            font-family: inherit;
         }
-        input:focus {
+        input:focus, select:focus {
             border-color: var(--accent-blue);
             background: #fff;
             box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
@@ -148,7 +149,6 @@
 
         .modal-overlay.active { display: flex; }
 
-        /* Preview Toolbar */
         .preview-toolbar {
             position: sticky;
             top: 20px;
@@ -181,8 +181,7 @@
         .toolbar-btn:hover { background: rgba(255,255,255,0.1); }
         .toolbar-btn.print { background: var(--accent-blue); color: white; font-weight: 600; }
         .toolbar-btn.print:hover { background: var(--accent-hover); }
-        
-        .toolbar-btn.img-dl { background: #34c759; color: white; font-weight: 600; } /* Green for Image */
+        .toolbar-btn.img-dl { background: #34c759; color: white; font-weight: 600; }
         .toolbar-btn.img-dl:hover { background: #30b350; }
 
         /* Paper Styling */
@@ -197,14 +196,37 @@
             position: relative;
         }
 
-        /* Preview Content */
         .preview-header { display: flex; justify-content: space-between; border-bottom: 2px solid #f5f5f5; padding-bottom: 30px; margin-bottom: 40px; }
         .preview-title { font-size: 32px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; }
+        
         .preview-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .preview-table th { text-align: left; color: var(--text-secondary); border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; text-transform: uppercase; }
         .preview-table td { padding: 15px 0; border-bottom: 1px solid #fafafa; }
-        .total-box { margin-top: 40px; text-align: right; }
-        .total-amount { font-size: 32px; font-weight: 700; color: var(--text-primary); }
+        
+        /* New Summary Box for Calculation Breakdown */
+        .summary-box {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .summary-table {
+            width: 300px;
+            border-collapse: collapse;
+        }
+        .summary-table td {
+            padding: 8px 0;
+            text-align: right;
+        }
+        .summary-label { color: var(--text-secondary); font-size: 14px; }
+        .summary-value { font-weight: 600; color: var(--text-primary); }
+        
+        .grand-total-row td {
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
 
         /* --- PRINT STYLES --- */
         @media print {
@@ -234,6 +256,7 @@
     </header>
 
     <div class="container">
+        
         <div class="card">
             <h3>Invoice Details</h3>
             <div class="grid-2">
@@ -262,6 +285,23 @@
             <h3>Items</h3>
             <div id="items-container"></div>
             <button class="btn-secondary" onclick="addItem()">+ Add Item</button>
+        </div>
+
+        <div class="card">
+            <h3>Discount & Currency</h3>
+            <div class="grid-2">
+                <div>
+                    <label>Discount Amount</label>
+                    <input type="number" id="discountValue" value="0" min="0">
+                </div>
+                <div>
+                    <label>Discount Type</label>
+                    <select id="discountType">
+                        <option value="fixed">Fixed Amount (-$)</option>
+                        <option value="percent">Percentage (-%)</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div style="text-align: center; margin-top: 40px;">
@@ -307,9 +347,25 @@
                 <tbody id="prev-items-body"></tbody>
             </table>
 
-            <div class="total-box">
-                <span style="color: #86868b; font-size: 14px; margin-right: 20px;">TOTAL DUE</span>
-                <div class="total-amount" id="prev-total">$0.00</div>
+            <div class="summary-box">
+                <table class="summary-table">
+                    <tr>
+                        <td class="summary-label">Subtotal</td>
+                        <td class="summary-value" id="prev-subtotal">0.00</td>
+                    </tr>
+                    <tr id="row-discount" style="display: none;">
+                        <td class="summary-label">Discount <span id="disc-rate-display"></span></td>
+                        <td class="summary-value" style="color: #ff3b30;" id="prev-discount">-0.00</td>
+                    </tr>
+                    <tr class="grand-total-row">
+                        <td>Total</td>
+                        <td id="prev-total">0.00</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="margin-top: 60px; font-size: 12px; color: #ccc; text-align: center;">
+                Generated via iVoice
             </div>
         </div>
     </div>
@@ -347,22 +403,24 @@
     }
 
     function generatePreview() {
+        // 1. Basic Info
         document.getElementById('prev-from-name').textContent = document.getElementById('fromName').value || 'Your Business';
         document.getElementById('prev-from-addr').textContent = document.getElementById('fromAddress').value;
         document.getElementById('prev-client-name').textContent = document.getElementById('toName').value || 'Client Name';
         document.getElementById('prev-client-addr').textContent = document.getElementById('toAddress').value;
         document.getElementById('prev-meta').innerHTML = `#${document.getElementById('invNumber').value}<br>${document.getElementById('invDate').value}`;
 
+        // 2. Items & Subtotal
         const tbody = document.getElementById('prev-items-body');
         tbody.innerHTML = '';
-        let grandTotal = 0;
+        let subtotal = 0;
 
         document.querySelectorAll('.item-row').forEach(row => {
             const desc = row.querySelector('.desc').value;
             const qty = parseFloat(row.querySelector('.qty').value) || 0;
             const price = parseFloat(row.querySelector('.price').value) || 0;
             const total = qty * price;
-            grandTotal += total;
+            subtotal += total;
 
             if(desc || total > 0) {
                 tbody.innerHTML += `
@@ -376,7 +434,37 @@
             }
         });
 
+        // 3. Discount Logic
+        const discountVal = parseFloat(document.getElementById('discountValue').value) || 0;
+        const discountType = document.getElementById('discountType').value;
+        let discountAmount = 0;
+
+        if (discountVal > 0) {
+            if (discountType === 'percent') {
+                discountAmount = subtotal * (discountVal / 100);
+                document.getElementById('disc-rate-display').innerText = `(${discountVal}%)`;
+            } else {
+                discountAmount = discountVal;
+                document.getElementById('disc-rate-display').innerText = '';
+            }
+            
+            // Show Discount Row
+            document.getElementById('row-discount').style.display = 'table-row';
+            document.getElementById('prev-discount').innerText = `-${discountAmount.toFixed(2)}`;
+        } else {
+            // Hide Discount Row if 0
+            document.getElementById('row-discount').style.display = 'none';
+        }
+
+        // 4. Final Calculation
+        let grandTotal = subtotal - discountAmount;
+        if(grandTotal < 0) grandTotal = 0;
+
+        // Display Totals
+        document.getElementById('prev-subtotal').textContent = subtotal.toFixed(2);
         document.getElementById('prev-total').textContent = grandTotal.toFixed(2);
+        
+        // Show Modal
         document.getElementById('previewModal').classList.add('active');
     }
 
@@ -384,28 +472,22 @@
         document.getElementById('previewModal').classList.remove('active');
     }
 
-    // --- NEW: Download as Image Function ---
     function downloadImage() {
         const element = document.getElementById("invoice-capture");
         const invNum = document.getElementById('invNumber').value || "Invoice";
-        
-        // Button feedback
         const btn = document.querySelector('.img-dl');
         const originalText = btn.innerText;
         btn.innerText = "Processing...";
 
         html2canvas(element, {
-            scale: 2, // High resolution (Retina support)
-            backgroundColor: "#ffffff", // Ensure white background
-            useCORS: true // Helps with external images/fonts
+            scale: 2,
+            backgroundColor: "#ffffff",
+            useCORS: true
         }).then(canvas => {
-            // Create a fake link to trigger download
             const link = document.createElement('a');
             link.download = `${invNum}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
-            
-            // Restore button text
             btn.innerText = originalText;
         });
     }
