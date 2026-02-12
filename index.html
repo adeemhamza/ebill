@@ -107,6 +107,21 @@
         }
 
         /* --- Items Table --- */
+        .items-header-row {
+            display: grid;
+            grid-template-columns: 3fr 1fr 1fr 1fr 30px; /* Same as item-row */
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+        
+        .items-header-row span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
         .item-row {
             display: grid;
             grid-template-columns: 3fr 1fr 1fr 1fr 30px;
@@ -203,7 +218,7 @@
         .preview-table th { text-align: left; color: var(--text-secondary); border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; text-transform: uppercase; }
         .preview-table td { padding: 15px 0; border-bottom: 1px solid #fafafa; }
         
-        /* New Summary Box for Calculation Breakdown */
+        /* Summary Box */
         .summary-box {
             margin-top: 40px;
             display: flex;
@@ -283,6 +298,14 @@
 
         <div class="card">
             <h3>Items</h3>
+            <div class="items-header-row">
+                <span>Description / Item</span>
+                <span>Qty</span>
+                <span>Price</span>
+                <span style="text-align: right;">Total</span>
+                <span></span>
+            </div>
+            
             <div id="items-container"></div>
             <button class="btn-secondary" onclick="addItem()">+ Add Item</button>
         </div>
