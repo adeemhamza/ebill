@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice System</title>
+    <title>iVoice - Professional System</title>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <style>
@@ -32,9 +32,8 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 60px;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
@@ -45,20 +44,23 @@
 
         .nav-left { display: flex; align-items: center; gap: 20px; }
         
+        .header-logo-img {
+            height: 30px;
+            width: auto;
+            display: none; /* Hidden by default */
+            border-radius: 4px;
+        }
+
         .back-link {
             text-decoration: none;
             color: var(--accent-blue);
             font-size: 24px;
-            font-weight: 300;
-            display: flex;
-            align-items: center;
-            transition: transform 0.2s;
+            display: flex; align-items: center;
         }
-        .back-link:hover { transform: translateX(-3px); }
 
         .logo-text { font-weight: 600; font-size: 20px; }
 
-        /* --- MODE SWITCHER (Segmented Control) --- */
+        /* --- MODE SWITCHER --- */
         .switcher-container {
             display: flex;
             justify-content: center;
@@ -70,7 +72,6 @@
             padding: 4px;
             border-radius: 12px;
             display: inline-flex;
-            position: relative;
         }
 
         .segment-btn {
@@ -83,8 +84,6 @@
             cursor: pointer;
             color: var(--text-secondary);
             transition: all 0.2s ease;
-            position: relative;
-            z-index: 2;
         }
 
         .segment-btn.active {
@@ -100,7 +99,6 @@
             padding: 0 20px 60px 20px;
         }
 
-        /* --- Cards --- */
         .card {
             background: var(--card-bg);
             border-radius: var(--border-radius);
@@ -120,7 +118,7 @@
             margin-bottom: 20px;
         }
 
-        /* --- Inputs --- */
+        /* --- Inputs & Upload --- */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 5px; }
@@ -135,10 +133,31 @@
             box-sizing: border-box;
             font-family: inherit;
         }
-        input:focus, select:focus {
+        input:focus {
             border-color: var(--accent-blue);
             background: #fff;
             box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+        }
+
+        /* File Upload Styling */
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .file-upload-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #e8e8ed;
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .file-upload-btn:hover { background: #d2d2d7; }
+        input[type="file"] {
+            display: none; /* Hide default input */
         }
 
         /* --- Items Table --- */
@@ -148,9 +167,6 @@
             gap: 10px;
             margin-bottom: 10px;
             padding: 0 5px;
-        }
-        
-        .items-header-row span {
             font-size: 12px;
             font-weight: 600;
             color: var(--text-secondary);
@@ -225,14 +241,10 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: background 0.2s;
         }
-
         .toolbar-btn:hover { background: rgba(255,255,255,0.1); }
-        .toolbar-btn.print { background: var(--accent-blue); color: white; font-weight: 600; }
-        .toolbar-btn.print:hover { background: var(--accent-hover); }
-        .toolbar-btn.img-dl { background: #34c759; color: white; font-weight: 600; }
-        .toolbar-btn.img-dl:hover { background: #30b350; }
+        .toolbar-btn.print { background: var(--accent-blue); font-weight: 600; }
+        .toolbar-btn.img-dl { background: #34c759; font-weight: 600; }
 
         /* Paper Styling */
         .preview-paper {
@@ -249,6 +261,13 @@
         .preview-header { display: flex; justify-content: space-between; border-bottom: 2px solid #f5f5f5; padding-bottom: 30px; margin-bottom: 40px; }
         .preview-title { font-size: 32px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; }
         
+        .preview-logo-img {
+            max-height: 80px;
+            max-width: 200px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
         .preview-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         .preview-table th { text-align: left; color: var(--text-secondary); border-bottom: 1px solid #eee; padding: 10px 0; font-size: 14px; text-transform: uppercase; }
         .preview-table td { padding: 15px 0; border-bottom: 1px solid #fafafa; }
@@ -258,24 +277,11 @@
             display: flex;
             justify-content: flex-end;
         }
-        .summary-table {
-            width: 300px;
-            border-collapse: collapse;
-        }
-        .summary-table td {
-            padding: 8px 0;
-            text-align: right;
-        }
+        .summary-table { width: 300px; border-collapse: collapse; }
+        .summary-table td { padding: 8px 0; text-align: right; }
         .summary-label { color: var(--text-secondary); font-size: 14px; }
         .summary-value { font-weight: 600; color: var(--text-primary); }
-        
-        .grand-total-row td {
-            border-top: 2px solid #eee;
-            padding-top: 15px;
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
+        .grand-total-row td { border-top: 2px solid #eee; padding-top: 15px; font-size: 24px; font-weight: 700; color: var(--text-primary); }
 
         /* --- PRINT STYLES --- */
         @media print {
@@ -300,7 +306,8 @@
     <header class="glass-header">
         <div class="nav-left">
             <a href="index.html" class="back-link" title="Back to Dashboard">←</a>
-            <div class="logo-text">Invoice System</div>
+            <img id="header-logo" class="header-logo-img" src="" alt="Logo">
+            <div class="logo-text">iVoice System</div>
         </div>
     </header>
 
@@ -332,16 +339,24 @@
         </div>
 
         <div class="card">
-            <h3>Parties</h3>
+            <h3>Parties & Branding</h3>
             <div class="grid-2">
                 <div>
-                    <label>From</label>
+                    <label>From (Your Business)</label>
+                    
+                    <div class="file-upload-wrapper">
+                        <label for="logo-upload" class="file-upload-btn">
+                            📷 Upload Brand Logo
+                        </label>
+                        <input type="file" id="logo-upload" accept="image/*" onchange="loadLogo(event)">
+                    </div>
+
                     <input type="text" id="fromName" placeholder="Business Name" class="form-group">
                     <input type="text" id="fromAddress" placeholder="Address / Contact">
                 </div>
                 <div>
                     <label id="lbl-to">Bill To</label>
-                    <input type="text" id="toName" placeholder="Client Name" class="form-group">
+                    <input type="text" id="toName" placeholder="Client Name" class="form-group" style="margin-top: 36px;">
                     <input type="text" id="toAddress" placeholder="Client Address">
                 </div>
             </div>
@@ -394,6 +409,8 @@
         <div class="preview-paper" id="invoice-capture">
             <div class="preview-header">
                 <div>
+                    <img id="preview-logo" class="preview-logo-img" src="" alt="Brand Logo">
+                    
                     <div style="font-weight: 800; font-size: 24px;" id="prev-from-name">Business Name</div>
                     <div style="color: #86868b; margin-top: 5px; white-space: pre-line;" id="prev-from-addr"></div>
                 </div>
@@ -439,53 +456,59 @@
             </div>
             
             <div style="margin-top: 60px; font-size: 12px; color: #ccc; text-align: center;">
-                Generated via Invoice System
+                Generated via iVoice
             </div>
         </div>
     </div>
 
 <script>
-    // --- Global Variables ---
-    let currentMode = 'invoice'; // or 'quote'
-
-    // --- Init ---
+    let currentMode = 'invoice';
     document.getElementById('invDate').valueAsDate = new Date();
     addItem();
 
-    // --- Mode Switcher Logic ---
+    // --- LOGO UPLOAD LOGIC ---
+    function loadLogo(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Update Header Logo
+                const headerLogo = document.getElementById('header-logo');
+                headerLogo.src = e.target.result;
+                headerLogo.style.display = 'block';
+
+                // Update Preview Logo
+                const previewLogo = document.getElementById('preview-logo');
+                previewLogo.src = e.target.result;
+                previewLogo.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // --- Mode Switcher ---
     function setMode(mode) {
         currentMode = mode;
-        
-        // Update Buttons
         document.getElementById('btn-inv').classList.toggle('active', mode === 'invoice');
         document.getElementById('btn-quote').classList.toggle('active', mode === 'quote');
 
-        // Update Labels & Placeholders
         if (mode === 'invoice') {
             document.getElementById('page-title').textContent = "New Invoice";
             document.getElementById('lbl-number').textContent = "Invoice #";
             document.getElementById('lbl-date').textContent = "Date";
             document.getElementById('lbl-to').textContent = "Bill To";
             document.getElementById('gen-btn').textContent = "Generate Invoice";
-            
-            // Set Default Number if empty or default
-            if(document.getElementById('invNumber').value.startsWith('QT-') || document.getElementById('invNumber').value === '') {
-                document.getElementById('invNumber').value = "INV-001";
-            }
+            if(document.getElementById('invNumber').value.startsWith('QT-')) document.getElementById('invNumber').value = "INV-001";
         } else {
             document.getElementById('page-title').textContent = "New Quotation";
             document.getElementById('lbl-number').textContent = "Quotation #";
             document.getElementById('lbl-date').textContent = "Valid Until";
             document.getElementById('lbl-to').textContent = "Quote For";
             document.getElementById('gen-btn').textContent = "Generate Quotation";
-            
-            if(document.getElementById('invNumber').value.startsWith('INV-') || document.getElementById('invNumber').value === '') {
-                document.getElementById('invNumber').value = "QT-001";
-            }
+            if(document.getElementById('invNumber').value.startsWith('INV-')) document.getElementById('invNumber').value = "QT-001";
         }
     }
 
-    // --- Standard Logic (Items, Totals) ---
     function addItem() {
         const id = Date.now();
         const html = `
@@ -514,23 +537,18 @@
         });
     }
 
-    // --- Preview Generation ---
     function generatePreview() {
-        // 1. Dynamic Labels based on Mode
         const mainTitle = currentMode === 'invoice' ? 'INVOICE' : 'QUOTATION';
         const billLabel = currentMode === 'invoice' ? 'Bill To:' : 'Quote For:';
         
         document.getElementById('prev-main-title').textContent = mainTitle;
         document.getElementById('prev-bill-label').textContent = billLabel;
-
-        // 2. Map Data
         document.getElementById('prev-from-name').textContent = document.getElementById('fromName').value || 'Your Business';
         document.getElementById('prev-from-addr').textContent = document.getElementById('fromAddress').value;
         document.getElementById('prev-client-name').textContent = document.getElementById('toName').value || 'Client Name';
         document.getElementById('prev-client-addr').textContent = document.getElementById('toAddress').value;
         document.getElementById('prev-meta').innerHTML = `#${document.getElementById('invNumber').value}<br>${document.getElementById('invDate').value}`;
 
-        // 3. Items Calculation
         const tbody = document.getElementById('prev-items-body');
         tbody.innerHTML = '';
         let subtotal = 0;
@@ -554,7 +572,6 @@
             }
         });
 
-        // 4. Discount Logic
         const discountVal = parseFloat(document.getElementById('discountValue').value) || 0;
         const discountType = document.getElementById('discountType').value;
         let discountAmount = 0;
