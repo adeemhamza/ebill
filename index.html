@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iVoice - Professional System</title>
+    <title>Invoice System</title>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <style>
@@ -44,13 +44,6 @@
 
         .nav-left { display: flex; align-items: center; gap: 20px; }
         
-        .header-logo-img {
-            height: 30px;
-            width: auto;
-            display: none; /* Hidden by default */
-            border-radius: 4px;
-        }
-
         .back-link {
             text-decoration: none;
             color: var(--accent-blue);
@@ -261,6 +254,7 @@
         .preview-header { display: flex; justify-content: space-between; border-bottom: 2px solid #f5f5f5; padding-bottom: 30px; margin-bottom: 40px; }
         .preview-title { font-size: 32px; font-weight: 800; color: var(--text-primary); letter-spacing: -1px; }
         
+        /* Logo Size in Preview */
         .preview-logo-img {
             max-height: 80px;
             max-width: 200px;
@@ -306,8 +300,7 @@
     <header class="glass-header">
         <div class="nav-left">
             <a href="index.html" class="back-link" title="Back to Dashboard">←</a>
-            <img id="header-logo" class="header-logo-img" src="" alt="Logo">
-            <div class="logo-text">iVoice System</div>
+            <div class="logo-text">Invoice System</div>
         </div>
     </header>
 
@@ -411,8 +404,7 @@
                 <div>
                     <img id="preview-logo" class="preview-logo-img" src="" alt="Brand Logo">
                     
-                    <div style="font-weight: 800; font-size: 24px;" id="prev-from-name">Business Name</div>
-                    <div style="color: #86868b; margin-top: 5px; white-space: pre-line;" id="prev-from-addr"></div>
+                    <div style="color: #86868b; margin-top: 10px; white-space: pre-line;" id="prev-from-addr"></div>
                 </div>
                 <div style="text-align: right;">
                     <div class="preview-title" id="prev-main-title">INVOICE</div>
@@ -456,7 +448,7 @@
             </div>
             
             <div style="margin-top: 60px; font-size: 12px; color: #ccc; text-align: center;">
-                Generated via iVoice
+                Generated via Invoice System
             </div>
         </div>
     </div>
@@ -466,18 +458,12 @@
     document.getElementById('invDate').valueAsDate = new Date();
     addItem();
 
-    // --- LOGO UPLOAD LOGIC ---
     function loadLogo(event) {
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                // Update Header Logo
-                const headerLogo = document.getElementById('header-logo');
-                headerLogo.src = e.target.result;
-                headerLogo.style.display = 'block';
-
-                // Update Preview Logo
+                // Only update Preview Logo
                 const previewLogo = document.getElementById('preview-logo');
                 previewLogo.src = e.target.result;
                 previewLogo.style.display = 'block';
@@ -486,7 +472,6 @@
         }
     }
 
-    // --- Mode Switcher ---
     function setMode(mode) {
         currentMode = mode;
         document.getElementById('btn-inv').classList.toggle('active', mode === 'invoice');
@@ -543,8 +528,10 @@
         
         document.getElementById('prev-main-title').textContent = mainTitle;
         document.getElementById('prev-bill-label').textContent = billLabel;
-        document.getElementById('prev-from-name').textContent = document.getElementById('fromName').value || 'Your Business';
+        
+        // Removed Business Name Heading as requested. Only Address shows.
         document.getElementById('prev-from-addr').textContent = document.getElementById('fromAddress').value;
+        
         document.getElementById('prev-client-name').textContent = document.getElementById('toName').value || 'Client Name';
         document.getElementById('prev-client-addr').textContent = document.getElementById('toAddress').value;
         document.getElementById('prev-meta').innerHTML = `#${document.getElementById('invNumber').value}<br>${document.getElementById('invDate').value}`;
