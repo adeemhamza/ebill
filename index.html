@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iVoice - Invoice Generator</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
     <style>
         :root {
             --bg-color: #f5f5f7;
@@ -43,7 +45,6 @@
 
         .nav-left { display: flex; align-items: center; gap: 20px; }
         
-        /* Back Arrow Link */
         .back-link {
             text-decoration: none;
             color: var(--accent-blue);
@@ -113,7 +114,6 @@
             align-items: center;
         }
         
-        /* Buttons */
         .btn-icon { border: none; background: none; color: #ccc; cursor: pointer; font-size: 20px; }
         .btn-icon:hover { color: var(--danger); }
 
@@ -136,7 +136,7 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); /* Darker background for focus */
+            background: rgba(0,0,0,0.85);
             backdrop-filter: blur(8px);
             z-index: 2000;
             display: none;
@@ -181,6 +181,9 @@
         .toolbar-btn:hover { background: rgba(255,255,255,0.1); }
         .toolbar-btn.print { background: var(--accent-blue); color: white; font-weight: 600; }
         .toolbar-btn.print:hover { background: var(--accent-hover); }
+        
+        .toolbar-btn.img-dl { background: #34c759; color: white; font-weight: 600; } /* Green for Image */
+        .toolbar-btn.img-dl:hover { background: #30b350; }
 
         /* Paper Styling */
         .preview-paper {
@@ -205,19 +208,18 @@
 
         /* --- PRINT STYLES --- */
         @media print {
-            body > * { display: none !important; } /* Hide everything */
+            body > * { display: none !important; }
             .modal-overlay { 
                 display: block !important; 
                 position: absolute; top: 0; left: 0; 
                 background: white; padding: 0; margin: 0;
                 overflow: visible;
             }
-            .preview-toolbar { display: none !important; } /* Hide buttons */
+            .preview-toolbar { display: none !important; }
             .preview-paper { 
                 box-shadow: none; margin: 0; width: 100%; 
                 min-height: auto; padding: 0; 
             }
-            /* Show paper content */
             .preview-paper * { visibility: visible; }
         }
     </style>
@@ -226,30 +228,17 @@
 
     <header class="glass-header">
         <div class="nav-left">
-            <a href="index.html" class="back-link" title="Back to Dashboard">
-                ←
-            </a>
+            <a href="index.html" class="back-link" title="Back to Dashboard">←</a>
             <div class="logo-text">iVoice Generator</div>
         </div>
     </header>
 
     <div class="container">
-        <div style="text-align: center; margin: 40px 0;">
-            <h1 style="font-size: 40px; margin: 0;">New Invoice</h1>
-            <p style="color: var(--text-secondary);">Create professional invoices in seconds.</p>
-        </div>
-
         <div class="card">
             <h3>Invoice Details</h3>
             <div class="grid-2">
-                <div>
-                    <label>Invoice #</label>
-                    <input type="text" id="invNumber" value="INV-001">
-                </div>
-                <div>
-                    <label>Date</label>
-                    <input type="date" id="invDate">
-                </div>
+                <div><label>Invoice #</label><input type="text" id="invNumber" value="INV-001"></div>
+                <div><label>Date</label><input type="date" id="invDate"></div>
             </div>
         </div>
 
@@ -257,12 +246,12 @@
             <h3>From & To</h3>
             <div class="grid-2">
                 <div>
-                    <label>From (Your Business)</label>
+                    <label>From</label>
                     <input type="text" id="fromName" placeholder="Business Name" class="form-group">
                     <input type="text" id="fromAddress" placeholder="Address / Contact">
                 </div>
                 <div>
-                    <label>Bill To (Client)</label>
+                    <label>Bill To</label>
                     <input type="text" id="toName" placeholder="Client Name" class="form-group">
                     <input type="text" id="toAddress" placeholder="Client Address">
                 </div>
@@ -271,8 +260,7 @@
 
         <div class="card">
             <h3>Items</h3>
-            <div id="items-container">
-                </div>
+            <div id="items-container"></div>
             <button class="btn-secondary" onclick="addItem()">+ Add Item</button>
         </div>
 
@@ -284,15 +272,12 @@
     <div class="modal-overlay" id="previewModal">
         
         <div class="preview-toolbar">
-            <button class="toolbar-btn" onclick="closePreview()">
-                ← Back to Edit
-            </button>
-            <button class="toolbar-btn print" onclick="window.print()">
-                Print / Save PDF
-            </button>
+            <button class="toolbar-btn" onclick="closePreview()">← Edit</button>
+            <button class="toolbar-btn img-dl" onclick="downloadImage()">⬇ Download Image</button>
+            <button class="toolbar-btn print" onclick="window.print()">🖨 Print / PDF</button>
         </div>
 
-        <div class="preview-paper">
+        <div class="preview-paper" id="invoice-capture">
             <div class="preview-header">
                 <div>
                     <div style="font-weight: 800; font-size: 24px;" id="prev-from-name">Business Name</div>
@@ -330,7 +315,6 @@
     </div>
 
 <script>
-    // Init
     document.getElementById('invDate').valueAsDate = new Date();
     addItem();
 
@@ -351,11 +335,10 @@
     function removeRow(id) {
         const row = document.getElementById(`row-${id}`);
         if(document.querySelectorAll('.item-row').length > 1) row.remove();
-        updateTotal(); // Recalculate if row removed
+        updateTotal();
     }
 
     function updateTotal() {
-        // Just updates the small text in the editor, calculation happens mainly in preview
         document.querySelectorAll('.item-row').forEach(row => {
             const qty = parseFloat(row.querySelector('.qty').value) || 0;
             const price = parseFloat(row.querySelector('.price').value) || 0;
@@ -364,17 +347,12 @@
     }
 
     function generatePreview() {
-        // 1. Data Mapping
         document.getElementById('prev-from-name').textContent = document.getElementById('fromName').value || 'Your Business';
         document.getElementById('prev-from-addr').textContent = document.getElementById('fromAddress').value;
-        
         document.getElementById('prev-client-name').textContent = document.getElementById('toName').value || 'Client Name';
         document.getElementById('prev-client-addr').textContent = document.getElementById('toAddress').value;
-        
-        document.getElementById('prev-meta').innerHTML = 
-            `#${document.getElementById('invNumber').value}<br>${document.getElementById('invDate').value}`;
+        document.getElementById('prev-meta').innerHTML = `#${document.getElementById('invNumber').value}<br>${document.getElementById('invDate').value}`;
 
-        // 2. Items Mapping
         const tbody = document.getElementById('prev-items-body');
         tbody.innerHTML = '';
         let grandTotal = 0;
@@ -399,13 +377,37 @@
         });
 
         document.getElementById('prev-total').textContent = grandTotal.toFixed(2);
-
-        // 3. Show Modal
         document.getElementById('previewModal').classList.add('active');
     }
 
     function closePreview() {
         document.getElementById('previewModal').classList.remove('active');
+    }
+
+    // --- NEW: Download as Image Function ---
+    function downloadImage() {
+        const element = document.getElementById("invoice-capture");
+        const invNum = document.getElementById('invNumber').value || "Invoice";
+        
+        // Button feedback
+        const btn = document.querySelector('.img-dl');
+        const originalText = btn.innerText;
+        btn.innerText = "Processing...";
+
+        html2canvas(element, {
+            scale: 2, // High resolution (Retina support)
+            backgroundColor: "#ffffff", // Ensure white background
+            useCORS: true // Helps with external images/fonts
+        }).then(canvas => {
+            // Create a fake link to trigger download
+            const link = document.createElement('a');
+            link.download = `${invNum}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            
+            // Restore button text
+            btn.innerText = originalText;
+        });
     }
 </script>
 
