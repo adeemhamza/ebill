@@ -329,6 +329,16 @@
                     <input type="date" id="invDate">
                 </div>
             </div>
+            <div class="grid-2" style="margin-top: 20px;">
+                <div>
+                    <label>NTN #</label>
+                    <input type="text" id="ntnNumber" placeholder="e.g. 1234567-8">
+                </div>
+                <div>
+                    <label>Payment Account Number</label>
+                    <input type="text" id="paymentAccount" placeholder="Bank / IBAN">
+                </div>
+            </div>
         </div>
 
         <div class="card">
@@ -408,7 +418,7 @@
                 </div>
                 <div style="text-align: right;">
                     <div class="preview-title" id="prev-main-title">INVOICE</div>
-                    <div style="color: #86868b; margin-top: 5px;" id="prev-meta"></div>
+                    <div style="color: #86868b; margin-top: 5px; line-height: 1.4;" id="prev-meta"></div>
                 </div>
             </div>
 
@@ -447,8 +457,8 @@
                 </table>
             </div>
             
-            <div style="margin-top: 60px; font-size: 12px; color: #ccc; text-align: center;">
-                Generated via Invoice System
+            <div style="margin-top: 60px; font-size: 14px; color: #1d1d1f; text-align: center; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">
+                This is computer generated Invoice no need for stamp
             </div>
         </div>
     </div>
@@ -529,12 +539,28 @@
         document.getElementById('prev-main-title').textContent = mainTitle;
         document.getElementById('prev-bill-label').textContent = billLabel;
         
-        // Removed Business Name Heading as requested. Only Address shows.
         document.getElementById('prev-from-addr').textContent = document.getElementById('fromAddress').value;
         
         document.getElementById('prev-client-name').textContent = document.getElementById('toName').value || 'Client Name';
         document.getElementById('prev-client-addr').textContent = document.getElementById('toAddress').value;
-        document.getElementById('prev-meta').innerHTML = `#${document.getElementById('invNumber').value}<br>${document.getElementById('invDate').value}`;
+        
+        // --- UPDATED META SECTION (Includes NTN and Payment Account) ---
+        const docNum = document.getElementById('invNumber').value;
+        const docDate = document.getElementById('invDate').value;
+        const ntn = document.getElementById('ntnNumber').value;
+        const account = document.getElementById('paymentAccount').value;
+
+        let metaHtml = `<strong>#${docNum}</strong><br>${docDate}`;
+        
+        if(ntn) {
+            metaHtml += `<br><span style="font-size:12px">NTN: ${ntn}</span>`;
+        }
+        if(account) {
+            metaHtml += `<br><span style="font-size:12px">ACC: ${account}</span>`;
+        }
+
+        document.getElementById('prev-meta').innerHTML = metaHtml;
+        // -------------------------------------------------------------
 
         const tbody = document.getElementById('prev-items-body');
         tbody.innerHTML = '';
