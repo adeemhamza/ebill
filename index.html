@@ -36,7 +36,9 @@
             justify-content: space-between; padding: 0 40px; z-index: 1000;
         }
         .back-link { text-decoration: none; color: var(--primary-color); font-size: 20px; font-weight: 500; }
-        .logo-text { font-weight: 700; font-size: 18px; letter-spacing: -0.5px; }
+        
+        /* Updated Logo Style */
+        .header-logo-img { height: 40px; width: auto; margin-left: 20px; display: block; }
 
         .container { max-width: 850px; margin: 40px auto; padding: 0 20px 60px 20px; }
         
@@ -155,9 +157,9 @@
 <body>
 
     <header class="glass-header">
-        <div class="nav-left">
+        <div class="nav-left" style="display: flex; align-items: center;">
             <a href="index.html" class="back-link">←</a>
-            <div class="logo-text" style="margin-left: 15px;">Invoice System</div>
+            <img src="logo.png" alt="Company Logo" class="header-logo-img">
         </div>
     </header>
 
